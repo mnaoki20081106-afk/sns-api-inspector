@@ -1,0 +1,43 @@
+name: Build documented API inventory
+on:
+  workflow_dispatch:
+    inputs:
+      spec_path:
+        description: "Path to an OpenAPI 3 JSON file committed in this repository (for example: docs/openapi.json)"
+        required: true
+        default: "docs/openapi.json"
+        type: string
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Validate spec path
+        env:
+          SPEC_PATH: ${{ inputs.spec_path }}
+        run: |
+          case "$SPEC_PATH" in
+            *.json) ;;
+            *) echo "Only a repository JSON file is supported."; exit 1 ;;
+          esac
+          test -f "$SPEC_PATH" || { echo "Spec file not found: $SPEC_PATH"; exit 1; }
+      - name: Build endpoint inventory
+        env:
+          SPEC_PATH: ${{ inputs.spec_path }}
+        run: node src/openapi-inventory.js "$SPEC_PATH"
+      - name: Upload API inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-inventory
+          path: artifacts/api-inventory.json
+          if-no-files-found: ignore
+          retention-days: 7

@@ -25,8 +25,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Inspect page metadata
         env:
-          TARGET_URL: \${{ inputs.target_url }}
-        run: node src/inspect.js "$TARGET_URL"
+          TARGET_URL: ${{ inputs.target_url }}
+        run: node src/inspect.js
       - name: Upload metadata report
         if: always()
         uses: actions/upload-artifact@v4

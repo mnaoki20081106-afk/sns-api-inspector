@@ -4,7 +4,8 @@
   "private": true,
   "description": "Privacy-preserving metadata inspector for browser traffic on pages you are authorized to inspect",
   "scripts": {
-    "inspect": "node src/inspect.js"
+    "inspect": "node src/inspect.js",
+    "inventory": "node src/openapi-inventory.js"
   },
   "dependencies": {
     "playwright": "^1.56.0"

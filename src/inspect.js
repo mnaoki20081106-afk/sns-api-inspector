@@ -1,7 +1,13 @@
 import { chromium } from "playwright";
+import { mkdir, writeFile } from "node:fs/promises";
 
-const target = process.env.TARGET_URL;
+const target = process.env.TARGET_URL ?? process.argv[2];
 if (!target) throw new Error("Set TARGET_URL to a site you own or are authorized to inspect.");
+
+const parsedTarget = new URL(target);
+if (!["http:", "https:"].includes(parsedTarget.protocol)) {
+  throw new Error("Only HTTP and HTTPS URLs are supported.");
+}
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
@@ -30,11 +36,10 @@ page.on("response", response => {
 });
 
 try {
-  await page.goto(target, { waitUntil: "domcontentloaded", timeout: 30000 });
+  await page.goto(parsedTarget.href, { waitUntil: "domcontentloaded", timeout: 30000 });
   await page.waitForTimeout(3000);
-  await import("node:fs/promises").then(fs =>
-    fs.writeFile("network-report.json", JSON.stringify(records, null, 2))
-  );
+  await mkdir("artifacts", { recursive: true });
+  await writeFile("artifacts/network-report.json", JSON.stringify(records, null, 2));
 } finally {
   await browser.close();
 }
